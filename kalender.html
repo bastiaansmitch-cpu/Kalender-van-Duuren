@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padelcentrum — Reserveren</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #1a6b3a;
+    --green-light: #e8f5ee;
+    --green-mid: #2d8f52;
+    --accent: #c8f560;
+    --court: #f97316;
+    --court-light: #fff3ed;
+    --lesson: #6366f1;
+    --lesson-light: #eef2ff;
+    --taken: #e5e7eb;
+    --taken-text: #9ca3af;
+    --bg: #f8faf8;
+    --card: #ffffff;
+    --text: #111827;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--green);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+  .logo span { color: white; font-weight: 300; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .btn-login {
+    background: var(--accent);
+    color: var(--green);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-login:hover { opacity: .85; }
+  .user-badge {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-size: 14px;
+  }
+  .user-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-logout:hover { background: rgba(255,255,255,0.1); }
+
+  /* WEEK NAV */
+  .week-nav {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .week-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 200px;
+    text-align: center;
+  }
+  .nav-btn {
+    background: white;
+    border: 1px solid var(--border);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all .15s;
+    font-size: 16px;
+    color: var(--text-muted);
+  }
+  .nav-btn:hover { border-color: var(--green); color: var(--green); }
+  .today-btn {
+    background: var(--green-light);
+    border: none;
+    color: var(--green);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .today-btn:hover { background: var(--green); color: white; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 12px 24px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+  }
+  .dot-free { background: var(--court); }
+  .dot-lesson { background: var(--lesson); }
+  .dot-taken { background: var(--taken); }
+
+  /* MAIN GRID */
+  .container { padding: 24px; overflow-x: auto; }
+
+  .grid-wrapper {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    min-width: 700px;
+  }
+
+  /* DAY HEADERS */
+  .day-headers {
+    display: grid;
+    grid-template-columns: 64px repeat(7, 1fr);
+    border-bottom: 2px solid var(--border);
+  }
+  .day-header-empty { background: var(--bg); }
+  .day-header {
+    padding: 12px 8px;
+    text-align: center;
+    border-left: 1px solid var(--border);
+  }
+  .day-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .day-number {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1.2;
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .day-header.today .day-number {
+    color: var(--green);
+    font-weight: 600;
+  }
+  .day-header.today .day-name { color: var(--green); }
+
+  /* TIME GRID */
+  .time-grid {
+    display: grid;
+    grid-template-columns: 64px repeat(7, 1fr);
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  /* TIME LABELS */
+  .time-col { }
+  .time-label {
+    height: 52px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 4px 10px 0 0;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  /* COURT COLUMNS */
+  .court-col {
+    border-left: 1px solid var(--border);
+  }
+
+  /* SLOT */
+  .slot {
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    padding: 4px;
+    position: relative;
+  }
+  .slot-inner {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    gap: 4px;
+    overflow: hidden;
+  }
+  .slot-inner.free {
+    background: var(--court-light);
+    color: var(--court);
+    border: 1px solid #fed7aa;
+  }
+  .slot-inner.free:hover {
+    background: var(--court);
+    color: white;
+    border-color: var(--court);
+    transform: scale(1.02);
+  }
+  .slot-inner.lesson {
+    background: var(--lesson-light);
+    color: var(--lesson);
+    border: 1px solid #c7d2fe;
+  }
+  .slot-inner.lesson:hover {
+    background: var(--lesson);
+    color: white;
+    border-color: var(--lesson);
+    transform: scale(1.02);
+  }
+  .slot-inner.taken {
+    background: var(--taken);
+    color: var(--taken-text);
+    border: 1px solid transparent;
+    cursor: default;
+  }
+  .slot-empty {
+    height: 100%;
+    border-radius: 6px;
+  }
+  .slot-icon { font-size: 10px; flex-shrink: 0; }
+  .slot-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot-count {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(248,250,248,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: var(--radius);
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .modal-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  .modal-detail {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .modal-row-label { color: var(--text-muted); }
+  .modal-row-value { font-weight: 500; }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-cancel-modal {
+    flex: 1;
+    padding: 11px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-cancel-modal:hover { border-color: #9ca3af; }
+  .btn-confirm {
+    flex: 2;
+    padding: 11px;
+    border: none;
+    background: var(--green);
+    color: white;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-confirm:hover { opacity: .85; }
+  .btn-confirm:disabled { opacity: .5; cursor: default; }
+  .btn-confirm.lesson-btn { background: var(--lesson); }
+
+  /* AUTH MODAL */
+  .auth-modal .modal-title { margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 5px; display: block; }
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--green); }
+  .auth-toggle {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .auth-toggle a { color: var(--green); cursor: pointer; text-decoration: none; font-weight: 500; }
+  .auth-toggle a:hover { text-decoration: underline; }
+  .error-msg {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .success-msg {
+    background: var(--green-light);
+    color: var(--green);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 300;
+    transition: transform .3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--green); }
+  .toast.error { background: #dc2626; }
+
+  /* EMPTY STATE */
+  .no-slots {
+    grid-column: 1 / -1;
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 12px; }
+    .week-nav { padding: 12px 16px; }
+    .legend { padding: 10px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">padel<span>centrum</span></div>
+  <div class="header-right">
+    <div class="user-badge" id="userBadge">
+      <div class="user-dot"></div>
+      <span id="userEmail"></span>
+      <button class="btn-logout" onclick="handleLogout()">Uitloggen</button>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="openAuthModal()">Inloggen</button>
+  </div>
+</header>
+
+<!-- WEEK NAV -->
+<div class="week-nav">
+  <button class="nav-btn" onclick="changeWeek(-1)">&#8592;</button>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="today-btn" onclick="goToToday()">Vandaag</button>
+    <div class="week-label" id="weekLabel"></div>
+  </div>
+  <button class="nav-btn" onclick="changeWeek(1)">&#8594;</button>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot dot-free"></div>Baan reserveren</div>
+  <div class="legend-item"><div class="legend-dot dot-lesson"></div>Les boeken</div>
+  <div class="legend-item"><div class="legend-dot dot-taken"></div>Bezet</div>
+</div>
+
+<!-- GRID -->
+<div class="container">
+  <div style="position:relative;">
+    <div class="grid-wrapper" id="gridWrapper">
+      <!-- Day headers -->
+      <div class="day-headers" id="dayHeaders">
+        <div class="day-header-empty"></div>
+      </div>
+      <!-- Time grid -->
+      <div class="time-grid" id="timeGrid"></div>
+    </div>
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Baan reserveren</div>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div class="modal-detail" id="modalDetail"></div>
+    <div class="error-msg" id="modalError"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" onclick="closeBookingModal()">Annuleren</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="confirmBooking()">Bevestigen</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal auth-modal">
+    <div class="modal-title" id="authTitle">Inloggen</div>
+    <div class="error-msg" id="authError"></div>
+    <div class="success-msg" id="authSuccess"></div>
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label">E-mailadres</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="jouw@email.nl">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wachtwoord</label>
+        <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')submitLogin()">
+      </div>
+      <button class="btn-confirm" style="width:100%;margin-top:4px;" onclick="submitLogin()">Inloggen</button>
+      <div class="auth-toggle">Nog geen account? <a onclick="switchToRegister()">Registreren</a></div>
+    </div>
+    <div id="registerForm" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Naam</label>
+        <input class="form-input" type="text" id="regName" placeholder="Jouw naam">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mailadres</label>
+        <input class="form-input" type="email" id="regEmail" placeholder="jouw@email.nl">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wachtwoord</label>
+        <input class="form-input" type="password" id="regPassword" placeholder="Minimaal 6 tekens">
+      </div>
+      <button class="btn-confirm" style="width:100%;margin-top:4px;" onclick="submitRegister()">Account aanmaken</button>
+      <div class="auth-toggle">Al een account? <a onclick="switchToLogin()">Inloggen</a></div>
+    </div>
+    <div style="text-align:right;margin-top:16px;">
+      <button class="btn-cancel-modal" style="width:auto;padding:8px 16px;" onclick="closeAuthModal()">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://yryfdnkbcipyhfsueivz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyeWZkbmtiY2lweWhmc3VlaXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTI2ODgsImV4cCI6MjA5MzU2ODY4OH0.53jUQwdvutI9KOfEP0MkwGD7qn-2UZE_ZngR5S1ziEo';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const DAYS_NL = ['zo','ma','di','wo','do','vr','za'];
+const DAYS_FULL = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const MONTHS_NL = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const HOURS = [];
+for (let h = 8; h <= 22; h++) HOURS.push(`${String(h).padStart(2,'0')}:00`);
+
+let currentWeekStart = getMonday(new Date());
+let courts = [];
+let slots = [];
+let bookings = [];
+let lessonBookings = [];
+let lessons = [];
+let currentUser = null;
+let pendingSlot = null;
+
+// ─── UTILS ───────────────────────────────────────────
+function getMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+function addDays(d, n) {
+  const date = new Date(d);
+  date.setDate(date.getDate() + n);
+  return date;
+}
+
+function formatDate(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function formatTime(t) {
+  return t.substring(0, 5);
+}
+
+// ─── AUTH ─────────────────────────────────────────────
+db.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    document.getElementById('userEmail').textContent = session.user.email;
+    document.getElementById('userBadge').style.display = 'flex';
+    document.getElementById('loginBtn').style.display = 'none';
+  } else {
+    currentUser = null;
+    document.getElementById('userBadge').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'block';
+  }
+  await loadData();
+});
+
+async function handleLogout() {
+  await db.auth.signOut();
+  showToast('Tot ziens!', 'success');
+}
+
+function openAuthModal() {
+  document.getElementById('authModal').classList.add('open');
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+}
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('open');
+}
+function switchToRegister() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('authTitle').textContent = 'Account aanmaken';
+}
+function switchToLogin() {
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('authTitle').textContent = 'Inloggen';
+}
+
+async function submitLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+  if (!email || !password) { showAuthError('Vul alle velden in.'); return; }
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) { showAuthError(error.message); return; }
+  closeAuthModal();
+  showToast('Welkom terug!', 'success');
+}
+
+async function submitRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if (!name || !email || !password) { showAuthError('Vul alle velden in.'); return; }
+  if (password.length < 6) { showAuthError('Wachtwoord minimaal 6 tekens.'); return; }
+  const { error } = await db.auth.signUp({ email, password, options: { data: { full_name: name } } });
+  if (error) { showAuthError(error.message); return; }
+  const successEl = document.getElementById('authSuccess');
+  successEl.textContent = 'Account aangemaakt! Check je e-mail om te bevestigen.';
+  successEl.style.display = 'block';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ─── DATA LOADING ─────────────────────────────────────
+async function loadData() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  const weekDates = Array.from({length: 7}, (_, i) => formatDate(addDays(currentWeekStart, i)));
+  const startDate = weekDates[0];
+  const endDate = weekDates[6];
+
+  const [courtsRes, slotsRes, lessonsRes] = await Promise.all([
+    db.from('courts').select('*').eq('is_active', true).order('name'),
+    db.from('time_slots').select('*').gte('date', startDate).lte('date', endDate),
+    db.from('lessons').select('*'),
+  ]);
+
+  courts = courtsRes.data || [];
+  slots = slotsRes.data || [];
+  lessons = lessonsRes.data || [];
+
+  if (currentUser) {
+    const [bookRes, lessonBookRes] = await Promise.all([
+      db.from('bookings').select('*').eq('user_id', currentUser.id).eq('status', 'confirmed'),
+      db.from('lesson_bookings').select('*').eq('user_id', currentUser.id).eq('status', 'confirmed'),
+    ]);
+    bookings = bookRes.data || [];
+    lessonBookings = lessonBookRes.data || [];
+  } else {
+    // Get all confirmed bookings to show taken slots
+    const allBookRes = await db.from('bookings').select('slot_id').eq('status', 'confirmed');
+    bookings = allBookRes.data || [];
+    lessonBookings = [];
+  }
+
+  renderGrid();
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// ─── RENDER ───────────────────────────────────────────
+function renderGrid() {
+  updateWeekLabel();
+  const days = Array.from({length: 7}, (_, i) => addDays(currentWeekStart, i));
+  const today = formatDate(new Date());
+
+  // Day headers
+  const headersEl = document.getElementById('dayHeaders');
+  headersEl.innerHTML = '<div class="day-header-empty" style="background:var(--bg)"></div>';
+  days.forEach(d => {
+    const isToday = formatDate(d) === today;
+    headersEl.innerHTML += `
+      <div class="day-header${isToday ? ' today' : ''}">
+        <div class="day-name">${DAYS_NL[d.getDay()]}</div>
+        <div class="day-number">${d.getDate()}</div>
+      </div>`;
+  });
+
+  // Time grid: time col + 7 day cols
+  const gridEl = document.getElementById('timeGrid');
+  gridEl.innerHTML = '';
+  gridEl.style.gridTemplateColumns = `64px repeat(7, 1fr)`;
+
+  // Time labels column
+  const timeCol = document.createElement('div');
+  timeCol.className = 'time-col';
+  HOURS.forEach(h => {
+    const lbl = document.createElement('div');
+    lbl.className = 'time-label';
+    lbl.textContent = h;
+    timeCol.appendChild(lbl);
+  });
+  gridEl.appendChild(timeCol);
+
+  // Day columns
+  days.forEach(day => {
+    const dateStr = formatDate(day);
+    const col = document.createElement('div');
+    col.className = 'court-col';
+
+    HOURS.forEach(hour => {
+      const slotEl = document.createElement('div');
+      slotEl.className = 'slot';
+
+      // Find slot for this date/hour across all courts
+      const daySlots = slots.filter(s => s.date === dateStr && formatTime(s.start_time) === hour);
+
+      if (daySlots.length === 0) {
+        slotEl.innerHTML = '<div class="slot-empty"></div>';
+      } else {
+        // Show first available slot or if taken
+        const freeSlot = daySlots.find(s => {
+          const isTaken = bookings.some(b => b.slot_id === s.id);
+          return s.slot_type === 'free' && s.is_available && !isTaken;
+        });
+        const lessonSlot = daySlots.find(s => s.slot_type === 'lesson');
+        const takenSlot = daySlots.find(s => bookings.some(b => b.slot_id === s.id));
+
+        if (freeSlot) {
+          // Count available courts at this time
+          const freeCourts = daySlots.filter(s => {
+            const isTaken = bookings.some(b => b.slot_id === s.id);
+            return s.slot_type === 'free' && s.is_available && !isTaken;
+          }).length;
+          slotEl.innerHTML = `
+            <div class="slot-inner free" onclick="openBookingModal('${freeSlot.id}', 'free')">
+              <span class="slot-icon">🎾</span>
+              <span class="slot-text">Vrij</span>
+              <span class="slot-count">${freeCourts}/${courts.length}</span>
+            </div>`;
+        } else if (lessonSlot) {
+          const lesson = lessons.find(l => l.slot_id === lessonSlot.id);
+          const spots = lesson ? `${lesson.current_participants}/${lesson.max_participants}` : '';
+          const full = lesson && lesson.current_participants >= lesson.max_participants;
+          slotEl.innerHTML = `
+            <div class="slot-inner ${full ? 'taken' : 'lesson'}" ${!full ? `onclick="openBookingModal('${lessonSlot.id}', 'lesson')"` : ''}>
+              <span class="slot-icon">📚</span>
+              <span class="slot-text">${lesson ? lesson.title : 'Les'}</span>
+              ${spots ? `<span class="slot-count">${spots}</span>` : ''}
+            </div>`;
+        } else if (takenSlot) {
+          slotEl.innerHTML = `
+            <div class="slot-inner taken">
+              <span class="slot-icon">✗</span>
+              <span class="slot-text">Bezet</span>
+            </div>`;
+        }
+      }
+
+      col.appendChild(slotEl);
+    });
+
+    gridEl.appendChild(col);
+  });
+}
+
+function updateWeekLabel() {
+  const end = addDays(currentWeekStart, 6);
+  const s = currentWeekStart;
+  document.getElementById('weekLabel').textContent =
+    `${s.getDate()} ${MONTHS_NL[s.getMonth()]} — ${end.getDate()} ${MONTHS_NL[end.getMonth()]} ${end.getFullYear()}`;
+}
+
+// ─── WEEK NAV ─────────────────────────────────────────
+function changeWeek(dir) {
+  currentWeekStart = addDays(currentWeekStart, dir * 7);
+  loadData();
+}
+function goToToday() {
+  currentWeekStart = getMonday(new Date());
+  loadData();
+}
+
+// ─── BOOKING MODAL ────────────────────────────────────
+function openBookingModal(slotId, type) {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+  const slot = slots.find(s => s.id === slotId);
+  if (!slot) return;
+  pendingSlot = { slot, type };
+
+  const day = new Date(slot.date);
+  const dayLabel = `${DAYS_FULL[day.getDay()]} ${day.getDate()} ${MONTHS_NL[day.getMonth()]}`;
+  const timeLabel = `${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`;
+
+  if (type === 'free') {
+    document.getElementById('modalTitle').textContent = 'Baan reserveren';
+    document.getElementById('modalSubtitle').textContent = 'Bevestig je reservering';
+    document.getElementById('confirmBtn').className = 'btn-confirm';
+    document.getElementById('confirmBtn').textContent = 'Reserveer baan';
+    document.getElementById('modalDetail').innerHTML = `
+      <div class="modal-row"><span class="modal-row-label">Dag</span><span class="modal-row-value">${dayLabel}</span></div>
+      <div class="modal-row"><span class="modal-row-label">Tijd</span><span class="modal-row-value">${timeLabel}</span></div>
+      <div class="modal-row"><span class="modal-row-label">Type</span><span class="modal-row-value">Vrij spelen</span></div>`;
+  } else {
+    const lesson = lessons.find(l => l.slot_id === slotId);
+    document.getElementById('modalTitle').textContent = 'Les boeken';
+    document.getElementById('modalSubtitle').textContent = lesson ? lesson.title : 'Bevestig je lesboeking';
+    document.getElementById('confirmBtn').className = 'btn-confirm lesson-btn';
+    document.getElementById('confirmBtn').textContent = 'Boek les';
+    document.getElementById('modalDetail').innerHTML = `
+      <div class="modal-row"><span class="modal-row-label">Dag</span><span class="modal-row-value">${dayLabel}</span></div>
+      <div class="modal-row"><span class="modal-row-label">Tijd</span><span class="modal-row-value">${timeLabel}</span></div>
+      ${lesson?.level ? `<div class="modal-row"><span class="modal-row-label">Niveau</span><span class="modal-row-value">${lesson.level}</span></div>` : ''}
+      ${lesson?.price ? `<div class="modal-row"><span class="modal-row-label">Prijs</span><span class="modal-row-value">€${lesson.price}</span></div>` : ''}`;
+  }
+
+  document.getElementById('modalError').style.display = 'none';
+  document.getElementById('bookingModal').classList.add('open');
+}
+
+function closeBookingModal() {
+  document.getElementById('bookingModal').classList.remove('open');
+  pendingSlot = null;
+}
+
+async function confirmBooking() {
+  if (!pendingSlot || !currentUser) return;
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Bezig...';
+  const errEl = document.getElementById('modalError');
+  errEl.style.display = 'none';
+
+  const { slot, type } = pendingSlot;
+
+  if (type === 'free') {
+    const { error } = await db.from('bookings').insert({
+      slot_id: slot.id,
+      user_id: currentUser.id,
+      status: 'confirmed'
+    });
+    if (error) {
+      errEl.textContent = error.code === '23505' ? 'Dit slot is net bezet geraakt.' : 'Er ging iets mis. Probeer opnieuw.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Reserveer baan';
+      return;
+    }
+    showToast('Baan gereserveerd! 🎾', 'success');
+  } else {
+    const lesson = lessons.find(l => l.slot_id === slot.id);
+    if (!lesson) return;
+    const { error } = await db.from('lesson_bookings').insert({
+      lesson_id: lesson.id,
+      user_id: currentUser.id,
+      status: 'confirmed'
+    });
+    if (error) {
+      errEl.textContent = error.code === '23505' ? 'Je bent al ingeschreven voor deze les.' : 'Er ging iets mis. Probeer opnieuw.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Boek les';
+      return;
+    }
+    // Update participant count
+    await db.from('lessons').update({ current_participants: lesson.current_participants + 1 }).eq('id', lesson.id);
+    showToast('Les geboekt! 📚', 'success');
+  }
+
+  closeBookingModal();
+  await loadData();
+}
+
+// ─── TOAST ────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type}`;
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ─── CLOSE ON OVERLAY CLICK ───────────────────────────
+document.getElementById('bookingModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeBookingModal();
+});
+document.getElementById('authModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAuthModal();
+});
+</script>
+</body>
+</html>
