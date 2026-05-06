@@ -628,7 +628,7 @@ function formatTime(t) {
 }
 
 // ─── AUTH ─────────────────────────────────────────────
-db.auth.onAuthStateChange(async (event, session) => {
+function updateUI(session) {
   if (session?.user) {
     currentUser = session.user;
     document.getElementById('userEmail').textContent = session.user.email;
@@ -639,8 +639,19 @@ db.auth.onAuthStateChange(async (event, session) => {
     document.getElementById('userBadge').style.display = 'none';
     document.getElementById('loginBtn').style.display = 'block';
   }
+}
+
+// Initialize: get session first, then load data
+(async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  updateUI(session);
   await loadData();
-});
+  // Listen for future auth changes
+  db.auth.onAuthStateChange(async (event, session) => {
+    updateUI(session);
+    await loadData();
+  });
+})();
 
 async function handleLogout() {
   await db.auth.signOut();
@@ -698,38 +709,48 @@ function showAuthError(msg) {
 }
 
 // ─── DATA LOADING ─────────────────────────────────────
+let isLoading = false;
 async function loadData() {
-  document.getElementById('loadingOverlay').style.display = 'flex';
-  const weekDates = Array.from({length: 7}, (_, i) => formatDate(addDays(currentWeekStart, i)));
-  const startDate = weekDates[0];
-  const endDate = weekDates[6];
+  if (isLoading) return;
+  isLoading = true;
+  try {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    const weekDates = Array.from({length: 7}, (_, i) => formatDate(addDays(currentWeekStart, i)));
+    const startDate = weekDates[0];
+    const endDate = weekDates[6];
 
-  const [courtsRes, slotsRes, lessonsRes] = await Promise.all([
-    db.from('courts').select('*').eq('is_active', true).order('name'),
-    db.from('time_slots').select('*').gte('date', startDate).lte('date', endDate),
-    db.from('lessons').select('*'),
-  ]);
+    console.log('Loading data for', startDate, 'to', endDate);
 
-  courts = courtsRes.data || [];
-  slots = slotsRes.data || [];
-  lessons = lessonsRes.data || [];
+    const courtsRes = await db.from('courts').select('*').eq('is_active', true).order('name');
+    console.log('Courts:', courtsRes.data?.length, courtsRes.error);
 
-  if (currentUser) {
-    const [bookRes, lessonBookRes] = await Promise.all([
-      db.from('bookings').select('*').eq('user_id', currentUser.id).eq('status', 'confirmed'),
-      db.from('lesson_bookings').select('*').eq('user_id', currentUser.id).eq('status', 'confirmed'),
-    ]);
-    bookings = bookRes.data || [];
-    lessonBookings = lessonBookRes.data || [];
-  } else {
-    // Get all confirmed bookings to show taken slots
-    const allBookRes = await db.from('bookings').select('slot_id').eq('status', 'confirmed');
+    const slotsRes = await db.from('time_slots').select('*').gte('date', startDate).lte('date', endDate);
+    console.log('Slots:', slotsRes.data?.length, slotsRes.error);
+
+    const lessonsRes = await db.from('lessons').select('*');
+    console.log('Lessons:', lessonsRes.data?.length, lessonsRes.error);
+
+    courts = courtsRes.data || [];
+    slots = slotsRes.data || [];
+    lessons = lessonsRes.data || [];
+
+    // Always get all bookings for display
+    const allBookRes = await db.from('bookings').select('slot_id, status').eq('status', 'confirmed');
+    console.log('Bookings:', allBookRes.data?.length, allBookRes.error);
     bookings = allBookRes.data || [];
-    lessonBookings = [];
-  }
 
-  renderGrid();
-  document.getElementById('loadingOverlay').style.display = 'none';
+    const allLessonBookRes = await db.from('lesson_bookings').select('lesson_id, user_id, status').eq('status', 'confirmed');
+    console.log('LessonBookings:', allLessonBookRes.data?.length, allLessonBookRes.error);
+    lessonBookings = allLessonBookRes.data || [];
+
+    console.log('Rendering grid with', courts.length, 'courts and', slots.length, 'slots');
+    renderGrid();
+  } catch (err) {
+    console.error('loadData error:', err);
+  } finally {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    isLoading = false;
+  }
 }
 
 // ─── RENDER ───────────────────────────────────────────
