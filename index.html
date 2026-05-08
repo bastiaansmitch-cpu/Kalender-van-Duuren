@@ -3,99 +3,298 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Van Duren Indoor Padel — Reserveren</title>
+<title>Padel Academy van Duren — Reserveren</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--forest:#14532d;--forest-mid:#166534;--forest-light:#dcfce7;--lime:#84cc16;--lime-bright:#a3e635;--hover-bg:#d1fae5;--hover-border:#34d399;--taken-bg:#f1f3f1;--taken-stripe:repeating-linear-gradient(135deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);--lesson:#7c3aed;--lesson-light:#ede9fe;--lesson-border:#a78bfa;--own-bg:#dcfce7;--own-border:#86efac;--own-text:#166534;--danger:#dc2626;--bg:#fafbfa;--card:#fff;--text:#111827;--text-muted:#6b7280;--text-light:#9ca3af;--border:#e5e7eb;--border-light:#f3f4f6;--radius:10px;--cw:36px;--ch:40px;--lw:80px;--shadow:0 1px 3px rgba(0,0,0,.05),0 4px 20px rgba(0,0,0,.04)}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-.header{background:var(--forest);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:baseline;gap:6px}.logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.3px}.logo-tag{font-size:9px;color:var(--lime-bright);letter-spacing:.05em;text-transform:uppercase}
+:root{
+  --navy:#0a2540;--navy-dark:#061a2e;--navy-mid:#1a3a5c;
+  --accent:#0066cc;--accent-light:#e6f0fa;
+  --gold:#d4a017;
+  --hover-bg:#dceaf7;--hover-border:#0066cc;
+  --taken-bg:#f5f6f7;--taken-stripe:repeating-linear-gradient(135deg,transparent,transparent 3px,rgba(10,37,64,.05) 3px,rgba(10,37,64,.05) 6px);
+  --lesson:#7c3aed;--lesson-light:#f0eafd;--lesson-border:#a78bfa;
+  --own-bg:#e6f0fa;--own-border:#0066cc;--own-text:#0a2540;
+  --danger:#dc2626;
+  --bg:#f8fafc;--card:#fff;--text:#0a2540;--text-muted:#64748b;--text-light:#94a3b8;
+  --border:#e2e8f0;--border-light:#f1f5f9;
+  --radius:8px;
+  --cw:42px;--ch:46px;--lw:90px;
+  --shadow-sm:0 1px 2px rgba(10,37,64,.06);
+  --shadow:0 1px 3px rgba(10,37,64,.08),0 4px 16px rgba(10,37,64,.04);
+}
+body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-weight:400}
+
+/* HEADER */
+.header{background:var(--navy);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--accent)}
+.logo{display:flex;flex-direction:column;line-height:1.05}
+.logo-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px;text-transform:uppercase}
+.logo-tag{font-size:9px;color:var(--accent);letter-spacing:.18em;text-transform:uppercase;font-weight:600;margin-top:2px}
 .header-right{display:flex;align-items:center;gap:8px}
-.btn-a{padding:5px 12px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:none}
-.btn-login{background:var(--lime);color:var(--forest)}.btn-login:hover{background:var(--lime-bright)}
-.btn-logout{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;font-weight:400}.btn-logout:hover{background:rgba(255,255,255,.08)}
-.uinfo{color:rgba(255,255,255,.7);font-size:11px;display:none;align-items:center;gap:5px}.udot{width:5px;height:5px;border-radius:50%;background:var(--lime-bright)}
-.day-nav{background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:10px;position:relative}
-.nbtn{background:#fff;border:1px solid var(--border);width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-muted);transition:all .15s}.nbtn:hover{border-color:var(--forest);color:var(--forest)}
-.dd{text-align:center;min-width:170px;cursor:pointer}.dd-main{font-size:16px;font-weight:600;letter-spacing:-.2px}.dd-sub{font-size:10px;color:var(--text-light);margin-top:1px}
-.tbtn{background:var(--forest-light);color:var(--forest);border:none;padding:5px 10px;border-radius:6px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer}.tbtn:hover{background:var(--forest);color:#fff}
-.cpop{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.15);padding:14px;z-index:60;width:260px;margin-top:6px}.cpop.open{display:block}
-.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.ct{font-size:13px;font-weight:600}
-.cn{background:none;border:1px solid var(--border);width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--text-muted)}.cn:hover{border-color:var(--forest);color:var(--forest)}
-.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center}
-.cdw{font-size:9px;color:var(--text-light);padding:3px 0;font-weight:500}
-.cd{font-size:11px;padding:5px 0;border-radius:5px;cursor:pointer;transition:all .1s}.cd:hover{background:var(--forest-light)}
-.cd.today{font-weight:700;color:var(--forest);box-shadow:inset 0 0 0 1.5px var(--forest);border-radius:50%}
-.cd.sel{background:var(--forest);color:#fff;font-weight:600;border-radius:50%}.cd.past{color:var(--text-light);opacity:.35;cursor:default}.cd.past:hover{background:transparent}.cd.om{opacity:.2}
-.ibar{display:flex;justify-content:space-between;align-items:center;padding:6px 20px;background:#fff;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:6px}
-.leg{display:flex;gap:10px}.li{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-muted)}.lb{width:12px;height:8px;border-radius:2px;border:1px solid var(--border)}
-.lf{background:#fff;border-style:dashed}.lt{background:var(--taken-bg);background-image:var(--taken-stripe)}.ll{background:var(--lesson-light);border-color:var(--lesson-border)}.lo{background:var(--own-bg);border-color:var(--own-border)}
-.pr{display:flex;gap:10px}.pt{font-size:9px;display:flex;align-items:center;gap:3px;font-weight:500}.pd{width:5px;height:5px;border-radius:2px}.pdal{background:#22c55e}.ppiek{background:#f59e0b}
-.gc{padding:14px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.grid{position:relative;display:inline-block;min-width:100%}
-.th{display:flex;margin-left:var(--lw);height:20px}
-.thc{width:calc(var(--cw)*2);min-width:calc(var(--cw)*2);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-light);font-weight:400;padding-left:1px}.thc.pk{color:#f59e0b}
-.cr{display:flex;align-items:stretch}
-.cl{width:var(--lw);min-width:var(--lw);display:flex;align-items:center;padding:0 6px;font-size:11px;font-weight:600;color:var(--text);background:#fff;border-right:1px solid var(--border);position:sticky;left:0;z-index:3;border-bottom:1px solid var(--border-light)}
-.cs{display:flex;position:relative;border-bottom:1px solid var(--border-light)}
+.btn-a{padding:7px 16px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;border:none;text-transform:uppercase;letter-spacing:.04em}
+.btn-login{background:var(--accent);color:#fff}.btn-login:hover{background:#0052a3}
+.btn-mijn{background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:500;text-transform:none;letter-spacing:0}.btn-mijn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.4)}
+.btn-logout{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;font-weight:400;text-transform:none;letter-spacing:0}.btn-logout:hover{background:rgba(255,255,255,.08)}
+.uinfo{color:rgba(255,255,255,.85);font-size:12px;display:none;align-items:center;gap:6px;font-weight:500}
+.udot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+
+/* DAY NAV */
+.day-nav{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:center;gap:14px;position:relative;box-shadow:var(--shadow-sm)}
+.nbtn{background:#fff;border:1px solid var(--border);width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-muted);transition:all .15s;font-weight:600}.nbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.dd{text-align:center;min-width:200px;cursor:pointer;padding:4px 12px;border-radius:6px;transition:background .15s}.dd:hover{background:var(--bg)}
+.dd-main{font-size:16px;font-weight:700;letter-spacing:-.2px;color:var(--navy)}
+.dd-sub{font-size:10px;color:var(--text-light);margin-top:2px;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.tbtn{background:var(--navy);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;transition:background .15s}.tbtn:hover{background:var(--navy-mid)}
+
+/* CALENDAR POPUP */
+.cpop{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 16px 48px rgba(10,37,64,.15);padding:16px;z-index:60;width:280px;border:1px solid var(--border)}.cpop.open{display:block}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.ct{font-size:13px;font-weight:700;color:var(--navy);text-transform:capitalize}
+.cn{background:none;border:1px solid var(--border);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-weight:600}.cn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cdw{font-size:9px;color:var(--text-light);padding:4px 0;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.cd{font-size:12px;padding:7px 0;border-radius:6px;cursor:pointer;transition:all .1s;font-weight:500}.cd:hover{background:var(--accent-light);color:var(--accent)}
+.cd.today{font-weight:800;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent);border-radius:50%}
+.cd.sel{background:var(--accent);color:#fff;font-weight:700;border-radius:50%}.cd.sel:hover{background:var(--accent);color:#fff}
+.cd.past{color:var(--text-light);opacity:.3;cursor:default}.cd.past:hover{background:transparent;color:var(--text-light)}
+.cd.om{opacity:.2}
+
+/* INFO BAR */
+.ibar{display:flex;justify-content:space-between;align-items:center;padding:10px 24px;background:#fff;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.leg{display:flex;gap:14px}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);font-weight:500}
+.lb{width:14px;height:10px;border-radius:2px;border:1px solid var(--border)}
+.lf{background:#fff;border-style:dashed;border-color:#cbd5e1}
+.lt{background:var(--taken-bg);background-image:var(--taken-stripe)}
+.ll{background:var(--lesson-light);border-color:var(--lesson-border)}
+.lo{background:var(--own-bg);border-color:var(--own-border)}
+.pr{display:flex;gap:12px}
+.pt{font-size:10px;display:flex;align-items:center;gap:4px;font-weight:500;color:var(--text-muted)}
+.pd{width:7px;height:7px;border-radius:2px}
+.pdal{background:#10b981}.ppiek{background:var(--gold)}
+
+/* GRID */
+.gc{padding:18px 24px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.grid{position:relative;display:inline-block;min-width:100%;background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.th{display:flex;margin-left:var(--lw);height:30px;background:var(--bg);border-bottom:1px solid var(--border)}
+.thc{width:calc(var(--cw)*2);min-width:calc(var(--cw)*2);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);font-weight:500;display:flex;align-items:center;padding-left:6px;border-right:1px solid var(--border-light)}.thc.pk{color:var(--gold);font-weight:600}
+.cr{display:flex;align-items:stretch}.cr:not(:last-child){border-bottom:1px solid var(--border-light)}
+.cl{width:var(--lw);min-width:var(--lw);display:flex;align-items:center;padding:0 12px;font-size:12px;font-weight:700;color:var(--navy);background:var(--bg);border-right:1px solid var(--border);position:sticky;left:0;z-index:3;text-transform:uppercase;letter-spacing:.04em}
+.cs{display:flex;position:relative}
 .c{width:var(--cw);min-width:var(--cw);height:var(--ch);border-right:1px solid var(--border-light);position:relative}.c:nth-child(even){border-right-color:var(--border)}
-.c.fr{cursor:pointer}.c.fr:hover{background:var(--hover-bg)}
-.c.pc{background:var(--taken-bg);background-image:var(--taken-stripe);opacity:.3;cursor:default}.c.cl2{background:var(--bg);cursor:default}
-.hb{position:absolute;top:2px;bottom:2px;left:1px;width:calc(var(--cw)*2 - 2px);border-radius:4px;border:1.5px dashed var(--hover-border);background:rgba(52,211,153,.08);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--forest);z-index:4;pointer-events:none}
-.bb{position:absolute;top:2px;bottom:2px;border-radius:4px;display:flex;align-items:center;padding:0 5px;font-size:9px;font-weight:500;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c.fr{cursor:pointer;transition:background .12s}.c.fr:hover{background:var(--hover-bg)}
+.c.pc{background:var(--taken-bg);background-image:var(--taken-stripe);opacity:.4;cursor:default}
+.c.cl2{background:var(--bg);cursor:default}
+
+/* HOVER */
+.hb{position:absolute;top:3px;bottom:3px;left:2px;width:calc(var(--cw)*2 - 4px);border-radius:5px;border:2px dashed var(--hover-border);background:rgba(0,102,204,.06);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);z-index:4;pointer-events:none;font-family:'JetBrains Mono',monospace}
+
+/* BLOCKS */
+.bb{position:absolute;top:3px;bottom:3px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.1px}
 .bb.own{background:var(--own-bg);border:1px solid var(--own-border);color:var(--own-text);pointer-events:none}
 .bb.oth{background:var(--taken-bg);border:1px solid var(--border);color:var(--text-muted);pointer-events:none}
-.bb.les{background:var(--lesson-light);border:1px solid var(--lesson-border);color:var(--lesson);cursor:pointer}.bb.les:hover{background:var(--lesson);color:#fff}
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}.mo.open{display:flex}
-.md{background:#fff;border-radius:14px;padding:22px;width:100%;max-width:380px;box-shadow:0 24px 80px rgba(0,0,0,.18);animation:su .2s ease}
+.bb.les{background:var(--lesson-light);border:1px solid var(--lesson-border);color:var(--lesson);cursor:pointer;transition:all .15s}.bb.les:hover{background:var(--lesson);color:#fff}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(10,37,64,.55);backdrop-filter:blur(2px);z-index:200;align-items:center;justify-content:center;padding:20px}.mo.open{display:flex}
+.md{background:#fff;border-radius:12px;padding:26px;width:100%;max-width:420px;box-shadow:0 24px 80px rgba(10,37,64,.25);animation:su .2s ease}
 @keyframes su{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
-.mt{font-size:16px;font-weight:700;margin-bottom:3px}.ms{font-size:11px;color:var(--text-muted);margin-bottom:14px}
-.mi{background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:14px}
-.mr{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}.mrl{color:var(--text-muted)}.mrv{font-weight:600}.mrp{color:var(--forest);font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.dp{display:flex;gap:5px;margin-bottom:14px}
-.do{flex:1;padding:8px 4px;border:2px solid var(--border);border-radius:7px;text-align:center;cursor:pointer;transition:all .15s}.do:hover:not(.dis){border-color:var(--forest-mid)}.do.act{border-color:var(--forest);background:var(--forest-light)}.do.dis{opacity:.3;cursor:not-allowed}
-.dt{font-size:12px;font-weight:700}.dpr{font-size:10px;color:var(--text-muted);margin-top:1px}.do.act .dpr{color:var(--forest)}
-.ma{display:flex;gap:6px}
-.bc{flex:1;padding:9px;border:1px solid var(--border);background:#fff;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer}.bc:hover{border-color:#9ca3af}
-.bk{flex:2;padding:9px;border:none;background:var(--forest);color:#fff;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}.bk:hover{opacity:.85}.bk:disabled{opacity:.4;cursor:default}.bk.lb2{background:var(--lesson)}
-.em{background:#fee2e2;color:var(--danger);padding:7px 10px;border-radius:6px;font-size:11px;margin-bottom:10px;display:none}
-.sm{background:var(--forest-light);color:var(--forest);padding:7px 10px;border-radius:6px;font-size:11px;margin-bottom:10px;display:none}
-.fg{margin-bottom:9px}.fl{font-size:10px;font-weight:500;color:var(--text-muted);margin-bottom:3px;display:block}
-.fi{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none}.fi:focus{border-color:var(--forest)}
-.at{text-align:center;margin-top:10px;font-size:11px;color:var(--text-muted)}.at a{color:var(--forest);cursor:pointer;font-weight:600;text-decoration:none}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:500;z-index:300;transition:transform .3s;white-space:nowrap}.toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:var(--forest)}.toast.error{background:var(--danger)}
-.ld{position:absolute;inset:0;background:rgba(250,251,250,.7);display:flex;align-items:center;justify-content:center;z-index:10}.sp{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--forest);border-radius:50%;animation:spin .5s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:640px){:root{--cw:28px;--ch:34px;--lw:56px}.header{padding:0 10px;height:46px}.logo-name{font-size:13px}.day-nav{padding:8px 10px}.dd-main{font-size:13px}.gc{padding:8px 10px}.ibar{padding:5px 10px}}
+.mt{font-size:18px;font-weight:700;margin-bottom:4px;color:var(--navy);letter-spacing:-.3px}
+.ms{font-size:12px;color:var(--text-muted);margin-bottom:18px;font-weight:500}
+.mi{background:var(--bg);border-radius:8px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--border)}
+.mr{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;align-items:center}.mrl{color:var(--text-muted);font-weight:500}.mrv{font-weight:600;color:var(--navy)}.mrp{color:var(--accent);font-size:16px;font-weight:800;font-family:'JetBrains Mono',monospace}
+
+/* DURATION PICKER */
+.dp{display:flex;gap:6px;margin-bottom:16px}
+.do{flex:1;padding:10px 6px;border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;transition:all .15s;background:#fff}
+.do:hover:not(.dis){border-color:var(--accent);background:var(--accent-light)}
+.do.act{border-color:var(--accent);background:var(--accent-light);box-shadow:inset 0 0 0 1px var(--accent)}
+.do.dis{opacity:.35;cursor:not-allowed;background:var(--bg)}
+.dt{font-size:13px;font-weight:700;color:var(--navy)}
+.dpr{font-size:10px;color:var(--text-muted);margin-top:2px;font-weight:500}.do.act .dpr{color:var(--accent);font-weight:600}.do.dis .dt,.do.dis .dpr{color:var(--text-light)}
+
+/* BUTTONS */
+.ma{display:flex;gap:8px}
+.bc{flex:1;padding:11px;border:1px solid var(--border);background:#fff;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s}.bc:hover{border-color:var(--text-muted);color:var(--navy)}
+.bk{flex:2;padding:11px;border:none;background:var(--accent);color:#fff;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;text-transform:uppercase;letter-spacing:.04em}.bk:hover{background:#0052a3}.bk:disabled{opacity:.4;cursor:default}.bk.lb2{background:var(--lesson)}.bk.lb2:hover{background:#6d28d9}
+
+.em{background:#fee2e2;color:var(--danger);padding:9px 12px;border-radius:7px;font-size:12px;margin-bottom:12px;display:none;font-weight:500}
+.sm{background:#dcfce7;color:#166534;padding:9px 12px;border-radius:7px;font-size:12px;margin-bottom:12px;display:none;font-weight:500}
+
+/* FORMS */
+.fg{margin-bottom:11px}.fl{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.04em}
+.fi{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;background:#fff}.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,102,204,.1)}
+.at{text-align:center;margin-top:12px;font-size:12px;color:var(--text-muted)}.at a{color:var(--accent);cursor:pointer;font-weight:600;text-decoration:none}.at a:hover{text-decoration:underline}
+
+/* MIJN BOEKINGEN */
+.mb-modal{max-width:560px}
+.mb-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px}
+.mb-tab{padding:8px 14px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;text-transform:uppercase;letter-spacing:.04em;transition:all .15s}
+.mb-tab:hover{color:var(--navy)}
+.mb-tab.act{color:var(--accent);border-bottom-color:var(--accent)}
+.mb-list{max-height:400px;overflow-y:auto}
+.mb-item{padding:12px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:border-color .15s}.mb-item:hover{border-color:var(--accent)}
+.mb-info{flex:1;min-width:0}
+.mb-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.mb-sub{font-size:11px;color:var(--text-muted);font-weight:500}
+.mb-status{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.mb-status.upcoming{background:#dcfce7;color:#166534}
+.mb-status.past{background:var(--bg);color:var(--text-muted)}
+.mb-empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:transform .3s;white-space:nowrap;box-shadow:0 12px 32px rgba(10,37,64,.3)}.toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:#059669}.toast.error{background:var(--danger)}
+
+/* LOADING */
+.ld{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:10px}
+.sp{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .5s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:640px){
+  :root{--cw:32px;--ch:38px;--lw:64px}
+  .header{padding:0 14px;height:54px}
+  .logo-name{font-size:13px}.logo-tag{font-size:8px}
+  .day-nav{padding:10px 14px}.dd-main{font-size:14px}
+  .gc{padding:12px 14px}
+  .ibar{padding:8px 14px;gap:6px}
+  .leg{gap:10px}.pr{gap:8px}
+  .btn-mijn,.btn-logout{padding:6px 10px;font-size:11px}
+}
 </style>
 </head>
 <body>
-<header class="header"><div class="logo"><span class="logo-name">Van Duren</span><span class="logo-tag">Indoor Padel</span></div><div class="header-right"><div class="uinfo" id="uinfo"><div class="udot"></div><span id="uemail"></span></div><button class="btn-a btn-logout" id="logoutBtn" style="display:none" onclick="doLogout()">Uitloggen</button><button class="btn-a btn-login" id="loginBtn" onclick="openAuth()">Inloggen</button></div></header>
-<div class="day-nav"><button class="nbtn" onclick="chDay(-1)">←</button><button class="tbtn" onclick="goTod()">Vandaag</button><div class="dd" onclick="togCal()"><div class="dd-main" id="dlab"></div><div class="dd-sub" id="dsub">▾ kalender</div></div><button class="nbtn" onclick="chDay(1)">→</button><div class="cpop" id="cpop"></div></div>
-<div class="ibar"><div class="leg"><div class="li"><div class="lb lf"></div>Vrij</div><div class="li"><div class="lb lt"></div>Bezet</div><div class="li"><div class="lb ll"></div>Les</div><div class="li"><div class="lb lo"></div>Mijn</div></div><div class="pr"><div class="pt"><div class="pd pdal"></div>Dal €22/u</div><div class="pt"><div class="pd ppiek"></div>Piek €39/u</div></div></div>
+
+<header class="header">
+  <div class="logo">
+    <span class="logo-name">Padel Academy van Duren</span>
+    <span class="logo-tag">Indoor Padel · Son</span>
+  </div>
+  <div class="header-right">
+    <div class="uinfo" id="uinfo"><div class="udot"></div><span id="uemail"></span></div>
+    <button class="btn-a btn-mijn" id="mijnBtn" style="display:none" onclick="openMijn()">Mijn boekingen</button>
+    <button class="btn-a btn-logout" id="logoutBtn" style="display:none" onclick="doLogout()">Uitloggen</button>
+    <button class="btn-a btn-login" id="loginBtn" onclick="openAuth()">Inloggen</button>
+  </div>
+</header>
+
+<div class="day-nav">
+  <button class="nbtn" onclick="chDay(-1)">←</button>
+  <button class="tbtn" onclick="goTod()">Vandaag</button>
+  <div class="dd" onclick="togCal()">
+    <div class="dd-main" id="dlab"></div>
+    <div class="dd-sub" id="dsub">▾ Kies datum</div>
+  </div>
+  <button class="nbtn" onclick="chDay(1)">→</button>
+  <div class="cpop" id="cpop"></div>
+</div>
+
+<div class="ibar">
+  <div class="leg">
+    <div class="li"><div class="lb lf"></div>Vrij</div>
+    <div class="li"><div class="lb lt"></div>Bezet</div>
+    <div class="li"><div class="lb ll"></div>Les</div>
+    <div class="li"><div class="lb lo"></div>Mijn boeking</div>
+  </div>
+  <div class="pr">
+    <div class="pt"><div class="pd pdal"></div>Dal €22/u</div>
+    <div class="pt"><div class="pd ppiek"></div>Piek €39/u</div>
+  </div>
+</div>
+
 <div class="gc"><div class="grid" id="grid"><div class="ld" id="ld"><div class="sp"></div></div></div></div>
 
-<div class="mo" id="bkMo"><div class="md"><div class="mt" id="bkT">Baan reserveren</div><div class="ms" id="bkS"></div><div class="em" id="bkE"></div><div class="dp" id="dP"></div><div class="mi" id="bkI"></div><div class="ma"><button class="bc" onclick="closeBk()">Annuleren</button><button class="bk" id="bkC" onclick="doBk()">Reserveer</button></div></div></div>
-<div class="mo" id="lsMo"><div class="md"><div class="mt" id="lsT">Les boeken</div><div class="ms" id="lsS"></div><div class="em" id="lsE"></div><div class="mi" id="lsI"></div><div class="ma"><button class="bc" onclick="closeLs()">Annuleren</button><button class="bk lb2" id="lsC" onclick="doLs()">Boek les</button></div></div></div>
-<div class="mo" id="auMo"><div class="md"><div class="mt" id="auT">Inloggen</div><div class="em" id="auE"></div><div class="sm" id="auS"></div><div id="liF"><div class="fg"><label class="fl">E-mailadres</label><input class="fi" type="email" id="auEm" placeholder="jouw@email.nl"></div><div class="fg"><label class="fl">Wachtwoord</label><input class="fi" type="password" id="auPw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLi()"></div><button class="bk" style="width:100%" onclick="doLi()">Inloggen</button><div class="at">Nog geen account? <a onclick="toReg()">Registreren</a></div></div><div id="reF" style="display:none"><div class="fg"><label class="fl">Naam</label><input class="fi" type="text" id="reNm" placeholder="Jouw naam"></div><div class="fg"><label class="fl">E-mailadres</label><input class="fi" type="email" id="reEm" placeholder="jouw@email.nl"></div><div class="fg"><label class="fl">Wachtwoord</label><input class="fi" type="password" id="rePw" placeholder="Minimaal 6 tekens"></div><button class="bk" style="width:100%" onclick="doRe()">Account aanmaken</button><div class="at">Al een account? <a onclick="toLi()">Inloggen</a></div></div><div style="text-align:right;margin-top:12px"><button class="bc" style="width:auto;padding:6px 12px" onclick="closeAuth()">Sluiten</button></div></div></div>
+<!-- BOOKING MODAL -->
+<div class="mo" id="bkMo"><div class="md">
+  <div class="mt" id="bkT">Baan reserveren</div>
+  <div class="ms" id="bkS"></div>
+  <div class="em" id="bkE"></div>
+  <div class="dp" id="dP"></div>
+  <div class="mi" id="bkI"></div>
+  <div class="ma">
+    <button class="bc" onclick="closeBk()">Annuleren</button>
+    <button class="bk" id="bkC" onclick="doBk()">Reserveren</button>
+  </div>
+</div></div>
+
+<!-- LESSON MODAL -->
+<div class="mo" id="lsMo"><div class="md">
+  <div class="mt" id="lsT">Les boeken</div>
+  <div class="ms" id="lsS"></div>
+  <div class="em" id="lsE"></div>
+  <div class="mi" id="lsI"></div>
+  <div class="ma">
+    <button class="bc" onclick="closeLs()">Annuleren</button>
+    <button class="bk lb2" id="lsC" onclick="doLs()">Boek les</button>
+  </div>
+</div></div>
+
+<!-- AUTH MODAL -->
+<div class="mo" id="auMo"><div class="md">
+  <div class="mt" id="auT">Inloggen</div>
+  <div class="ms">Reserveer banen en boek lessen</div>
+  <div class="em" id="auE"></div>
+  <div class="sm" id="auS"></div>
+  <div id="liF">
+    <div class="fg"><label class="fl">E-mailadres</label><input class="fi" type="email" id="auEm" placeholder="jouw@email.nl"></div>
+    <div class="fg"><label class="fl">Wachtwoord</label><input class="fi" type="password" id="auPw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLi()"></div>
+    <button class="bk" style="width:100%" onclick="doLi()">Inloggen</button>
+    <div class="at">Nog geen account? <a onclick="toReg()">Registreren</a></div>
+  </div>
+  <div id="reF" style="display:none">
+    <div class="fg"><label class="fl">Naam</label><input class="fi" type="text" id="reNm" placeholder="Jouw naam"></div>
+    <div class="fg"><label class="fl">E-mailadres</label><input class="fi" type="email" id="reEm" placeholder="jouw@email.nl"></div>
+    <div class="fg"><label class="fl">Wachtwoord</label><input class="fi" type="password" id="rePw" placeholder="Minimaal 6 tekens"></div>
+    <button class="bk" style="width:100%" onclick="doRe()">Account aanmaken</button>
+    <div class="at">Al een account? <a onclick="toLi()">Inloggen</a></div>
+  </div>
+  <div style="text-align:right;margin-top:14px"><button class="bc" style="width:auto;padding:8px 16px;flex:none" onclick="closeAuth()">Sluiten</button></div>
+</div></div>
+
+<!-- MIJN BOEKINGEN MODAL -->
+<div class="mo" id="mbMo"><div class="md mb-modal">
+  <div class="mt">Mijn boekingen</div>
+  <div class="ms">Overzicht van je reserveringen en lessen</div>
+  <div class="mb-tabs">
+    <div class="mb-tab act" onclick="mbTab('upcoming')" id="mbT-upcoming">Aankomend</div>
+    <div class="mb-tab" onclick="mbTab('past')" id="mbT-past">Verleden</div>
+    <div class="mb-tab" onclick="mbTab('lessons')" id="mbT-lessons">Mijn lessen</div>
+  </div>
+  <div class="mb-list" id="mbList"><div class="mb-empty">Laden...</div></div>
+  <div style="text-align:right;margin-top:14px"><button class="bc" style="width:auto;padding:8px 16px;flex:none" onclick="closeMijn()">Sluiten</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const SB_URL='https://yryfdnkbcipyhfsueivz.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyeWZkbmtiY2lweWhmc3VlaXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTI2ODgsImV4cCI6MjA5MzU2ODY4OH0.53jUQwdvutI9KOfEP0MkwGD7qn-2UZE_ZngR5S1ziEo';
+const SB_URL='https://yryfdnkbcipyhfsueivz.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyeWZkbmtiY2lweWhmc3VlaXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTI2ODgsImV4cCI6MjA5MzU2ODY4OH0.53jUQwdvutI9KOfEP0MkwGD7qn-2UZE_ZngR5S1ziEo';
 const{createClient}=supabase;const db=createClient(SB_URL,SB_KEY);
+
 const PD=22,PP=39,PKW='17:00',MBD=2;
-const DN=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'],MS=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'],MF=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
-let cD=new Date();cD.setHours(0,0,0,0);let courts=[],slots=[],bks=[],lss=[],lbs=[],cU=null,pB=null,pL=null,cM=null,cY=null;
-const fm=d=>d.toISOString().split('T')[0],ft=t=>t?t.substring(0,5):'',t2=t=>{const[h,m]=t.split(':').map(Number);return h*60+m},m2=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`,isW=d=>{const x=d.getDay();return x===0||x===6},isP=(d,t)=>isW(d)||t2(t)>=t2(PKW);
+const DN=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const MS=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const MF=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+
+let cD=new Date();cD.setHours(0,0,0,0);
+let courts=[],slots=[],bks=[],lss=[],lbs=[];
+let cU=null,pB=null,pL=null,cM=null,cY=null,mbCurrentTab='upcoming';
+
+// Utils
+const fm=d=>d.toISOString().split('T')[0];
+const ft=t=>t?t.substring(0,5):'';
+const t2=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const m2=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+const isW=d=>{const x=d.getDay();return x===0||x===6};
+const isP=(d,t)=>isW(d)||t2(t)>=t2(PKW);
 function gP(d,s,dur){let t=0;for(let m=t2(s);m<t2(s)+dur;m+=30)t+=(isP(d,m2(m))?PP:PD)/2;return t}
 function isT(d){const t=new Date();t.setHours(0,0,0,0);return d.getTime()===t.getTime()}
-function isPD(d){const t=new Date();t.setHours(0,0,0,0);return d<t}
 function isPSl(t){if(!isT(cD))return false;const n=new Date();return t2(t)<n.getHours()*60+n.getMinutes()}
 
 // Auth
-function uUI(s){if(s?.user){cU=s.user;document.getElementById('uemail').textContent=s.user.email;document.getElementById('uinfo').style.display='flex';document.getElementById('logoutBtn').style.display='block';document.getElementById('loginBtn').style.display='none'}else{cU=null;document.getElementById('uinfo').style.display='none';document.getElementById('logoutBtn').style.display='none';document.getElementById('loginBtn').style.display='block'}}
+function uUI(s){
+  if(s?.user){cU=s.user;document.getElementById('uemail').textContent=s.user.email;document.getElementById('uinfo').style.display='flex';document.getElementById('mijnBtn').style.display='block';document.getElementById('logoutBtn').style.display='block';document.getElementById('loginBtn').style.display='none'}
+  else{cU=null;document.getElementById('uinfo').style.display='none';document.getElementById('mijnBtn').style.display='none';document.getElementById('logoutBtn').style.display='none';document.getElementById('loginBtn').style.display='block'}
+}
 (async()=>{const{data:{session}}=await db.auth.getSession();uUI(session);await load();db.auth.onAuthStateChange(e=>{if(e==='INITIAL_SESSION')return;if(e==='SIGNED_IN'||e==='SIGNED_OUT')location.reload()})})();
 async function doLogout(){await db.auth.signOut();toast('Tot ziens!','success')}
 function openAuth(){document.getElementById('auMo').classList.add('open');document.getElementById('auE').style.display='none';document.getElementById('auS').style.display='none'}
@@ -109,7 +308,18 @@ function aErr(m){const el=document.getElementById('auE');el.textContent=m;el.sty
 // Data
 async function load(){
   document.getElementById('ld').style.display='flex';
-  try{const ds=fm(cD);const[a,b,c,d,e]=await Promise.all([db.from('courts').select('*').eq('is_active',true).order('name'),db.from('time_slots').select('*').eq('date',ds),db.from('lessons').select('*'),db.from('bookings').select('*').eq('status','confirmed'),db.from('lesson_bookings').select('*').eq('status','confirmed')]);courts=a.data||[];slots=b.data||[];lss=c.data||[];bks=d.data||[];lbs=e.data||[];render()}catch(e){console.error(e)}
+  try{
+    const ds=fm(cD);
+    const[a,b,c,d,e]=await Promise.all([
+      db.from('courts').select('*').eq('is_active',true).order('name'),
+      db.from('time_slots').select('*').eq('date',ds),
+      db.from('lessons').select('*'),
+      db.from('bookings').select('*').eq('status','confirmed'),
+      db.from('lesson_bookings').select('*').eq('status','confirmed')
+    ]);
+    courts=a.data||[];slots=b.data||[];lss=c.data||[];bks=d.data||[];lbs=e.data||[];
+    render();
+  }catch(e){console.error(e)}
   document.getElementById('ld').style.display='none';
 }
 
@@ -122,7 +332,7 @@ function togCal(){const p=document.getElementById('cpop');if(p.classList.contain
 function rCal(){
   const p=document.getElementById('cpop'),td=new Date();td.setHours(0,0,0,0);
   const f=new Date(cY,cM,1),sd=(f.getDay()+6)%7,dim=new Date(cY,cM+1,0).getDate(),pdm=new Date(cY,cM,0).getDate();
-  let h=`<div class="ch"><button class="cn" onclick="cNav(-1)">←</button><span class="ct">${MS[cM]} ${cY}</span><button class="cn" onclick="cNav(1)">→</button></div><div class="cg">`;
+  let h=`<div class="ch"><button class="cn" onclick="cNav(-1)">←</button><span class="ct">${MF[cM]} ${cY}</span><button class="cn" onclick="cNav(1)">→</button></div><div class="cg">`;
   ['ma','di','wo','do','vr','za','zo'].forEach(d=>h+=`<div class="cdw">${d}</div>`);
   for(let i=sd-1;i>=0;i--)h+=`<div class="cd om">${pdm-i}</div>`;
   for(let d=1;d<=dim;d++){const dt=new Date(cY,cM,d);dt.setHours(0,0,0,0);const ip=dt<td,it=dt.getTime()===td.getTime(),is=dt.getTime()===cD.getTime();
@@ -136,13 +346,22 @@ document.addEventListener('click',e=>{const p=document.getElementById('cpop'),n=
 
 // Render
 function render(){
-  updLab();const g=document.getElementById('grid'),ds=fm(cD),dSl=slots.filter(s=>s.date===ds);
-  if(!dSl.length||!courts.length){g.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:12px">Geen tijdsloten voor deze dag.</div>';return}
-  let mn=1440,mx=0;dSl.forEach(s=>{const a=t2(ft(s.start_time)),b=t2(ft(s.end_time));if(a<mn)mn=a;if(b>mx)mx=b});
+  updLab();
+  const g=document.getElementById('grid'),ds=fm(cD),dSl=slots.filter(s=>s.date===ds);
+  if(!dSl.length||!courts.length){
+    g.innerHTML='<div style="padding:48px;text-align:center;color:var(--text-muted);font-size:13px;font-weight:500">Geen tijdsloten beschikbaar voor deze dag.</div>';
+    return;
+  }
+
+  let mn=1440,mx=0;
+  dSl.forEach(s=>{const a=t2(ft(s.start_time)),b=t2(ft(s.end_time));if(a<mn)mn=a;if(b>mx)mx=b});
+  if(mn>=mx){mn=540;mx=1380}
+
   const hh=[];for(let m=mn;m<mx;m+=30)hh.push(m2(m));
   const hrs=[];for(let m=mn;m<mx;m+=60)hrs.push(m2(m));
+
   let html='<div class="th">';
-  hrs.forEach(h=>{const pk=isP(cD,h);html+=`<div class="thc${pk?' pk':''}">${parseInt(h)}</div>`});
+  hrs.forEach(h=>{const pk=isP(cD,h);html+=`<div class="thc${pk?' pk':''}">${parseInt(h)}:00</div>`});
   html+='</div>';
 
   courts.forEach(court=>{
@@ -150,15 +369,15 @@ function render(){
     const cSl=dSl.filter(s=>s.court_id===court.id).sort((a,b)=>t2(ft(a.start_time))-t2(ft(b.start_time)));
     const sm={};cSl.forEach(s=>sm[ft(s.start_time)]=s);
 
-    // Group contiguous bookings
     const bG=[],lG=[],proc=new Set();
     cSl.forEach(s=>{
       if(proc.has(s.id))return;
       const bk=bks.find(b=>b.slot_id===s.id),ls=lss.find(l=>l.slot_id===s.id);
-      if(bk){let gr=[s];proc.add(s.id);let nm=t2(ft(s.end_time));
+      if(bk){
+        let gr=[s];proc.add(s.id);let nm=t2(ft(s.end_time));
         while(true){const ns=cSl.find(x=>!proc.has(x.id)&&t2(ft(x.start_time))===nm);if(!ns)break;const nb=bks.find(b=>b.slot_id===ns.id);if(!nb||nb.user_id!==bk.user_id)break;gr.push(ns);proc.add(ns.id);nm=t2(ft(ns.end_time))}
-        bG.push({sl:gr,bk,st:ft(gr[0].start_time),et:ft(gr[gr.length-1].end_time)})}
-      else if(ls){proc.add(s.id);lG.push({s,ls,st:ft(s.start_time),et:ft(s.end_time)})}
+        bG.push({sl:gr,bk,st:ft(gr[0].start_time),et:ft(gr[gr.length-1].end_time)});
+      }else if(ls){proc.add(s.id);lG.push({s,ls,st:ft(s.start_time),et:ft(s.end_time)})}
     });
 
     hh.forEach(t=>{
@@ -168,61 +387,177 @@ function render(){
       const lg=lG.find(g=>ft(g.s.start_time)===t);
       if(bg&&ft(bg.sl[0].start_time)===t){
         const sp=bg.sl.length,own=cU&&bg.bk.user_id===cU.id;
-        html+=`<div class="c" style="position:relative"><div class="bb ${own?'own':'oth'}" style="left:1px;width:calc(${sp} * var(--cw) - 2px)">${own?'Mijn':'Bezet'}</div></div>`;return;
+        html+=`<div class="c" style="position:relative"><div class="bb ${own?'own':'oth'}" style="left:2px;width:calc(${sp} * var(--cw) - 4px)">${own?'Mijn reservering':'Bezet'}</div></div>`;return;
       }else if(bg){html+=`<div class="c"></div>`;return}
       if(lg){const sp=Math.max(1,(t2(lg.et)-t2(lg.st))/30);
-        html+=`<div class="c" style="position:relative"><div class="bb les" style="left:1px;width:calc(${sp} * var(--cw) - 2px)" onclick="openLs('${lg.ls.id}')">${lg.ls.title}</div></div>`;return}
+        html+=`<div class="c" style="position:relative"><div class="bb les" style="left:2px;width:calc(${sp} * var(--cw) - 4px)" onclick="openLs('${lg.ls.id}')">${lg.ls.title}</div></div>`;return}
       if(past){html+=`<div class="c pc"></div>`;return}
       html+=`<div class="c fr" data-slot="${sl.id}" data-time="${t}" data-ci="${court.id}" data-cn="${court.name}" onmouseenter="hI(this)" onmouseleave="hO(this)" onclick="openBk(this)"></div>`;
     });
     html+='</div></div>';
   });
+
   g.innerHTML=html+'<div class="ld" id="ld" style="display:none"><div class="sp"></div></div>';
 }
 
-function updLab(){const d=cD;document.getElementById('dlab').textContent=`${DN[d.getDay()]} ${d.getDate()} ${MF[d.getMonth()]}`;const td=new Date();td.setHours(0,0,0,0);const df=Math.round((d-td)/864e5);document.getElementById('dsub').textContent=(df===0?'Vandaag — ':df===1?'Morgen — ':'')+'▾ kalender'}
+function updLab(){
+  const d=cD;
+  document.getElementById('dlab').textContent=`${DN[d.getDay()]} ${d.getDate()} ${MF[d.getMonth()]}`;
+  const td=new Date();td.setHours(0,0,0,0);
+  const df=Math.round((d-td)/864e5);
+  let sub='▾ Kies datum';
+  if(df===0)sub='Vandaag · ▾ kies datum';
+  else if(df===1)sub='Morgen · ▾ kies datum';
+  else if(df>1&&df<7)sub=`Over ${df} dagen · ▾ kies datum`;
+  document.getElementById('dsub').textContent=sub;
+}
 
 // Hover
-function hI(c){const nx=c.nextElementSibling;c.style.background='var(--hover-bg)';if(nx&&nx.classList.contains('fr'))nx.style.background='var(--hover-bg)';
-  const t=c.dataset.time,pk=isP(cD,t),pr=pk?PP:PD;const d=document.createElement('div');d.className='hb';d.textContent=`€${pr}/u`;c.appendChild(d)}
+function hI(c){
+  const nx=c.nextElementSibling;
+  c.style.background='var(--hover-bg)';
+  if(nx&&nx.classList.contains('fr'))nx.style.background='var(--hover-bg)';
+  const t=c.dataset.time,pk=isP(cD,t),pr=pk?PP:PD;
+  const d=document.createElement('div');d.className='hb';d.textContent=`€${pr}/u`;c.appendChild(d);
+}
 function hO(c){c.style.background='';const nx=c.nextElementSibling;if(nx)nx.style.background='';const h=c.querySelector('.hb');if(h)h.remove()}
 
 // Booking
 function openBk(c){
   if(!cU){openAuth();return}
   const myBks=bks.filter(b=>b.user_id===cU.id&&slots.some(s=>s.id===b.slot_id&&s.date===fm(cD)));
-  if(myBks.length>=MBD){toast(`Max ${MBD} reserveringen per dag`,'error');return}
+  if(myBks.length>=MBD){toast(`Maximaal ${MBD} reserveringen per dag`,'error');return}
   const t=c.dataset.time,ci=c.dataset.ci,cn=c.dataset.cn;
   const durs=[{min:60,l:'1 uur'},{min:90,l:'1,5 uur'},{min:120,l:'2 uur'}];
-  const avail=durs.map(dur=>{let ok=true;const ids=[];for(let m=t2(t);m<t2(t)+dur.min;m+=30){const tm=m2(m);const sl=slots.find(s=>s.court_id===ci&&ft(s.start_time)===tm&&s.date===fm(cD));if(!sl){ok=false;break}if(bks.find(b=>b.slot_id===sl.id)||lss.find(l=>l.slot_id===sl.id)){ok=false;break}if(isPSl(tm)&&isT(cD)){ok=false;break}ids.push(sl.id)}return{...dur,ok,pr:gP(cD,t,dur.min),ids}});
+  const avail=durs.map(dur=>{
+    let ok=true;const ids=[];
+    for(let m=t2(t);m<t2(t)+dur.min;m+=30){
+      const tm=m2(m);
+      const sl=slots.find(s=>s.court_id===ci&&ft(s.start_time)===tm&&s.date===fm(cD));
+      if(!sl){ok=false;break}
+      if(bks.find(b=>b.slot_id===sl.id)||lss.find(l=>l.slot_id===sl.id)){ok=false;break}
+      if(isPSl(tm)&&isT(cD)){ok=false;break}
+      ids.push(sl.id);
+    }
+    return{...dur,ok,pr:gP(cD,t,dur.min),ids};
+  });
   pB={t,ci,cn,avail,sel:avail.find(a=>a.ok)||null};
   document.getElementById('bkT').textContent='Baan reserveren';
-  document.getElementById('bkS').textContent=`${cn} — ${DN[cD.getDay()]} ${cD.getDate()} ${MS[cD.getMonth()]}`;
-  document.getElementById('bkE').style.display='none';rDP();uBI();document.getElementById('bkMo').classList.add('open');
+  document.getElementById('bkS').textContent=`${cn} · ${DN[cD.getDay()]} ${cD.getDate()} ${MS[cD.getMonth()]}`;
+  document.getElementById('bkE').style.display='none';
+  rDP();uBI();
+  document.getElementById('bkMo').classList.add('open');
 }
 function rDP(){const p=document.getElementById('dP');p.innerHTML='';pB.avail.forEach((d,i)=>{const a=pB.sel?.min===d.min;p.innerHTML+=`<div class="do${a?' act':''}${!d.ok?' dis':''}" onclick="${d.ok?`sD(${i})`:''}"><div class="dt">${d.l}</div><div class="dpr">${d.ok?'€'+d.pr.toFixed(2):'Niet beschikbaar'}</div></div>`})}
 function sD(i){pB.sel=pB.avail[i];rDP();uBI()}
-function uBI(){const el=document.getElementById('bkI'),s=pB.sel;if(!s){el.innerHTML='';return}const end=m2(t2(pB.t)+s.min),pk=isP(cD,pB.t);
-  el.innerHTML=`<div class="mr"><span class="mrl">Tijd</span><span class="mrv">${pB.t} – ${end}</span></div><div class="mr"><span class="mrl">Duur</span><span class="mrv">${s.l}</span></div><div class="mr"><span class="mrl">Tarief</span><span class="mrv">${pk?'Piek':'Dal'}</span></div><div class="mr" style="margin-top:3px;padding-top:5px;border-top:1px solid var(--border)"><span class="mrl" style="font-size:13px">Totaal</span><span class="mrp">€${s.pr.toFixed(2)}</span></div>`}
+function uBI(){
+  const el=document.getElementById('bkI'),s=pB.sel;
+  if(!s){el.innerHTML='<div style="color:var(--text-muted);font-size:12px">Geen beschikbare duur</div>';return}
+  const end=m2(t2(pB.t)+s.min),pk=isP(cD,pB.t);
+  el.innerHTML=`<div class="mr"><span class="mrl">Tijd</span><span class="mrv">${pB.t} – ${end}</span></div>
+    <div class="mr"><span class="mrl">Duur</span><span class="mrv">${s.l}</span></div>
+    <div class="mr"><span class="mrl">Tarief</span><span class="mrv">${pk?'Piektarief':'Daltarief'}</span></div>
+    <div class="mr" style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border)"><span class="mrl" style="font-size:13px;font-weight:600">Totaal</span><span class="mrp">€${s.pr.toFixed(2)}</span></div>`;
+}
 function closeBk(){document.getElementById('bkMo').classList.remove('open');pB=null}
-async function doBk(){if(!pB?.sel||!cU)return;const btn=document.getElementById('bkC');btn.disabled=true;btn.textContent='Bezig...';const err=document.getElementById('bkE');err.style.display='none';
-  for(const id of pB.sel.ids){const{error}=await db.from('bookings').insert({slot_id:id,user_id:cU.id,status:'confirmed'});if(error){err.textContent=error.code==='23505'?'Slot net bezet.':'Fout.';err.style.display='block';btn.disabled=false;btn.textContent='Reserveer';return}}
-  toast('Gereserveerd! 🎾','success');closeBk();btn.disabled=false;btn.textContent='Reserveer';await load()}
+async function doBk(){
+  if(!pB?.sel||!cU)return;
+  const btn=document.getElementById('bkC');btn.disabled=true;btn.textContent='Bezig...';
+  const err=document.getElementById('bkE');err.style.display='none';
+  for(const id of pB.sel.ids){
+    const{error}=await db.from('bookings').insert({slot_id:id,user_id:cU.id,status:'confirmed'});
+    if(error){err.textContent=error.code==='23505'?'Slot is net bezet geraakt.':'Er ging iets mis.';err.style.display='block';btn.disabled=false;btn.textContent='Reserveren';return}
+  }
+  toast('Baan gereserveerd!','success');closeBk();btn.disabled=false;btn.textContent='Reserveren';await load();
+}
 
 // Lesson
-function openLs(id){if(!cU){openAuth();return}const ls=lss.find(l=>l.id===id);if(!ls)return;const sl=slots.find(s=>s.id===ls.slot_id);if(!sl)return;
-  pL=ls;document.getElementById('lsT').textContent=ls.title;document.getElementById('lsS').textContent=`${DN[cD.getDay()]} ${cD.getDate()} ${MS[cD.getMonth()]}`;document.getElementById('lsE').style.display='none';
-  document.getElementById('lsI').innerHTML=`<div class="mr"><span class="mrl">Tijd</span><span class="mrv">${ft(sl.start_time)} – ${ft(sl.end_time)}</span></div>${ls.level?`<div class="mr"><span class="mrl">Niveau</span><span class="mrv">${ls.level}</span></div>`:''}<div class="mr"><span class="mrl">Plekken</span><span class="mrv">${ls.current_participants}/${ls.max_participants}</span></div>${ls.price?`<div class="mr" style="margin-top:3px;padding-top:5px;border-top:1px solid var(--border)"><span class="mrl">Prijs</span><span class="mrp">€${Number(ls.price).toFixed(2)}</span></div>`:''}`;
+function openLs(id){
+  if(!cU){openAuth();return}
+  const ls=lss.find(l=>l.id===id);if(!ls)return;
+  const sl=slots.find(s=>s.id===ls.slot_id);if(!sl)return;
+  pL=ls;
+  document.getElementById('lsT').textContent=ls.title;
+  document.getElementById('lsS').textContent=`${DN[cD.getDay()]} ${cD.getDate()} ${MS[cD.getMonth()]}`;
+  document.getElementById('lsE').style.display='none';
+  document.getElementById('lsI').innerHTML=`<div class="mr"><span class="mrl">Tijd</span><span class="mrv">${ft(sl.start_time)} – ${ft(sl.end_time)}</span></div>${ls.level?`<div class="mr"><span class="mrl">Niveau</span><span class="mrv">${ls.level}</span></div>`:''}<div class="mr"><span class="mrl">Plekken</span><span class="mrv">${ls.current_participants}/${ls.max_participants}</span></div>${ls.price?`<div class="mr" style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border)"><span class="mrl" style="font-size:13px;font-weight:600">Prijs</span><span class="mrp">€${Number(ls.price).toFixed(2)}</span></div>`:''}`;
   const btn=document.getElementById('lsC'),full=ls.current_participants>=ls.max_participants,ab=lbs.some(x=>x.lesson_id===ls.id&&x.user_id===cU.id);
-  if(ab){btn.textContent='Al ingeschreven';btn.disabled=true}else if(full){btn.textContent='Vol';btn.disabled=true}else{btn.textContent='Boek les';btn.disabled=false}
-  document.getElementById('lsMo').classList.add('open')}
+  if(ab){btn.textContent='Al ingeschreven';btn.disabled=true}
+  else if(full){btn.textContent='Vol';btn.disabled=true}
+  else{btn.textContent='Boek les';btn.disabled=false}
+  document.getElementById('lsMo').classList.add('open');
+}
 function closeLs(){document.getElementById('lsMo').classList.remove('open');pL=null}
-async function doLs(){if(!pL||!cU)return;const btn=document.getElementById('lsC');btn.disabled=true;btn.textContent='Bezig...';
-  const{error}=await db.from('lesson_bookings').insert({lesson_id:pL.id,user_id:cU.id,status:'confirmed'});if(error){document.getElementById('lsE').textContent='Fout.';document.getElementById('lsE').style.display='block';btn.disabled=false;btn.textContent='Boek les';return}
-  await db.from('lessons').update({current_participants:pL.current_participants+1}).eq('id',pL.id);toast('Les geboekt! 📚','success');closeLs();btn.disabled=false;btn.textContent='Boek les';await load()}
+async function doLs(){
+  if(!pL||!cU)return;
+  const btn=document.getElementById('lsC');btn.disabled=true;btn.textContent='Bezig...';
+  const{error}=await db.from('lesson_bookings').insert({lesson_id:pL.id,user_id:cU.id,status:'confirmed'});
+  if(error){document.getElementById('lsE').textContent='Er ging iets mis.';document.getElementById('lsE').style.display='block';btn.disabled=false;btn.textContent='Boek les';return}
+  await db.from('lessons').update({current_participants:pL.current_participants+1}).eq('id',pL.id);
+  toast('Les geboekt!','success');closeLs();btn.disabled=false;btn.textContent='Boek les';await load();
+}
 
+// MIJN BOEKINGEN
+async function openMijn(){
+  document.getElementById('mbMo').classList.add('open');
+  mbCurrentTab='upcoming';
+  document.querySelectorAll('.mb-tab').forEach(t=>t.classList.remove('act'));
+  document.getElementById('mbT-upcoming').classList.add('act');
+  await loadMijn();
+}
+function closeMijn(){document.getElementById('mbMo').classList.remove('open')}
+async function mbTab(tab){
+  mbCurrentTab=tab;
+  document.querySelectorAll('.mb-tab').forEach(t=>t.classList.remove('act'));
+  document.getElementById('mbT-'+tab).classList.add('act');
+  await loadMijn();
+}
+
+async function loadMijn(){
+  const list=document.getElementById('mbList');
+  list.innerHTML='<div class="mb-empty">Laden...</div>';
+  const today=new Date();today.setHours(0,0,0,0);
+
+  if(mbCurrentTab==='lessons'){
+    const{data}=await db.from('lesson_bookings').select('*,lessons(title,level,price,slot_id,time_slots(date,start_time,end_time,courts(name)))').eq('user_id',cU.id).eq('status','confirmed').order('created_at',{ascending:false});
+    if(!data?.length){list.innerHTML='<div class="mb-empty">Nog geen lessen geboekt.</div>';return}
+    let h='';
+    data.forEach(lb=>{
+      const ls=lb.lessons,sl=ls?.time_slots;if(!ls||!sl)return;
+      const date=new Date(sl.date);
+      const isPast=date<today;
+      h+=`<div class="mb-item"><div class="mb-info"><div class="mb-title">${ls.title}</div><div class="mb-sub">${DN[date.getDay()]} ${date.getDate()} ${MS[date.getMonth()]} · ${ft(sl.start_time)}–${ft(sl.end_time)} · ${sl.courts?.name||''}${ls.level?' · '+ls.level:''}</div></div><span class="mb-status ${isPast?'past':'upcoming'}">${isPast?'Geweest':'Aankomend'}</span></div>`;
+    });
+    list.innerHTML=h;
+    return;
+  }
+
+  // Bookings
+  const{data}=await db.from('bookings').select('*,time_slots(date,start_time,end_time,courts(name))').eq('user_id',cU.id).eq('status','confirmed').order('created_at',{ascending:false});
+  if(!data?.length){list.innerHTML='<div class="mb-empty">Nog geen reserveringen.</div>';return}
+
+  // Group contiguous bookings per day+court
+  const grouped={};
+  data.forEach(b=>{const s=b.time_slots;if(!s)return;const k=`${s.date}|${s.courts?.name||''}`;if(!grouped[k])grouped[k]={date:s.date,court:s.courts?.name,slots:[]};grouped[k].slots.push({start:ft(s.start_time),end:ft(s.end_time)})});
+  const groups=Object.values(grouped).map(g=>{g.slots.sort((a,b)=>t2(a.start)-t2(b.start));return{...g,startTime:g.slots[0].start,endTime:g.slots[g.slots.length-1].end}}).sort((a,b)=>(a.date+a.startTime).localeCompare(b.date+b.startTime));
+
+  const filtered=groups.filter(g=>{const d=new Date(g.date);d.setHours(0,0,0,0);return mbCurrentTab==='upcoming'?d>=today:d<today});
+  if(mbCurrentTab==='upcoming')filtered.sort((a,b)=>(a.date+a.startTime).localeCompare(b.date+b.startTime));
+  else filtered.sort((a,b)=>(b.date+b.startTime).localeCompare(a.date+a.startTime));
+
+  if(!filtered.length){list.innerHTML=`<div class="mb-empty">${mbCurrentTab==='upcoming'?'Geen aankomende reserveringen.':'Geen verleden reserveringen.'}</div>`;return}
+
+  let h='';
+  filtered.forEach(g=>{
+    const date=new Date(g.date);
+    h+=`<div class="mb-item"><div class="mb-info"><div class="mb-title">${g.court||'Baan'}</div><div class="mb-sub">${DN[date.getDay()]} ${date.getDate()} ${MS[date.getMonth()]} · ${g.startTime}–${g.endTime}</div></div><span class="mb-status ${mbCurrentTab==='upcoming'?'upcoming':'past'}">${mbCurrentTab==='upcoming'?'Aankomend':'Geweest'}</span></div>`;
+  });
+  list.innerHTML=h;
+}
+
+// Toast
 function toast(m,t=''){const el=document.getElementById('toast');el.textContent=m;el.className=`toast ${t}`;setTimeout(()=>el.classList.add('show'),10);setTimeout(()=>el.classList.remove('show'),3000)}
-['bkMo','lsMo','auMo'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open')}));
+['bkMo','lsMo','auMo','mbMo'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open')}));
 </script>
 </body>
 </html>
