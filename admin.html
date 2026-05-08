@@ -139,7 +139,7 @@ tr:hover td{background:#fafbfa}
   <aside class="sidebar">
     <div class="sidebar-logo">padel<span>centrum</span> <span style="font-size:11px;opacity:.5">admin</span></div>
     <nav class="sidebar-nav">
-      <div class="nav-item active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span>Dashboard <span id="navNotif" style="background:#dc2626;color:white;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:auto;display:none"></span></div>
       <div class="nav-item" onclick="showSection('schema')"><span class="nav-icon">📅</span>Weekschema</div>
       <div class="nav-item" onclick="showSection('lessons')"><span class="nav-icon">📚</span>Lessen</div>
       <div class="nav-item" onclick="showSection('bookings')"><span class="nav-icon">📋</span>Reserveringen</div>
@@ -238,8 +238,12 @@ tr:hover td{background:#fafbfa}
         <div class="card-title">Nieuwe les aanmaken</div>
         <div class="card-subtitle">Kies een bestaand tijdslot en maak er een les van</div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Datum</label><input class="form-input" type="date" id="lessonDate" onchange="loadAvailableSlots()"></div>
-          <div class="form-group"><label class="form-label">Tijdslot</label><select class="form-select" id="lessonSlot"><option value="">Kies eerst een datum</option></select></div>
+          <div class="form-group"><label class="form-label">Datum</label><input class="form-input" type="date" id="lessonDate" onchange="loadCourtsForLesson()"></div>
+          <div class="form-group"><label class="form-label">Baan</label><select class="form-select" id="lessonCourt"><option value="">Kies een baan</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Van</label><input class="form-input" type="time" id="lessonFrom" step="1800" value="09:00"></div>
+          <div class="form-group"><label class="form-label">Tot</label><input class="form-input" type="time" id="lessonTo" step="1800" value="10:00"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Titel</label><input class="form-input" type="text" id="lessonTitle" placeholder="bv. Beginnersclinic"></div>
@@ -392,6 +396,18 @@ let editingSlotId=null;
   document.getElementById('userBadge').textContent=currentUser.email;
   initSchemaForm();
   loadDashboard();
+
+  // Realtime notification for new bookings
+  let newBookingCount=0;
+  db.channel('admin-bookings').on('postgres_changes',{event:'INSERT',schema:'public',table:'bookings'},payload=>{
+    newBookingCount++;
+    const notif=document.getElementById('navNotif');
+    notif.textContent=newBookingCount;
+    notif.style.display='inline';
+    showToast('Nieuwe reservering! 🎾','success');
+    // Refresh dashboard if visible
+    if(document.getElementById('sec-dashboard').classList.contains('active'))loadDashboard();
+  }).subscribe();
 })();
 
 async function handleLogout(){await db.auth.signOut();window.location.href='/'}
@@ -585,30 +601,40 @@ async function deleteSlot(){
 }
 
 // ─── LESSEN ───
-async function loadAvailableSlots(){
-  const date=document.getElementById('lessonDate').value;
-  if(!date)return;
-  const{data}=await db.from('time_slots').select('id,start_time,end_time,slot_type,courts(name)').eq('date',date).eq('slot_type','free').order('start_time');
-  const sel=document.getElementById('lessonSlot');
-  sel.innerHTML='<option value="">Kies een tijdslot</option>';
-  (data||[]).forEach(s=>{
-    sel.innerHTML+=`<option value="${s.id}">${fmtTime(s.start_time)}–${fmtTime(s.end_time)} (${s.courts?.name||'?'})</option>`;
-  });
+async function loadCourtsForLesson(){
+  const{data}=await db.from('courts').select('id,name').eq('is_active',true).order('name');
+  const sel=document.getElementById('lessonCourt');
+  sel.innerHTML='<option value="">Kies een baan</option>';
+  (data||[]).forEach(c=>{sel.innerHTML+=`<option value="${c.id}">${c.name}</option>`});
 }
 
 async function createLesson(){
-  const slotId=document.getElementById('lessonSlot').value;
+  const date=document.getElementById('lessonDate').value;
+  const courtId=document.getElementById('lessonCourt').value;
+  const from=document.getElementById('lessonFrom').value;
+  const to=document.getElementById('lessonTo').value;
   const title=document.getElementById('lessonTitle').value.trim();
   const level=document.getElementById('lessonLevel').value;
   const max=parseInt(document.getElementById('lessonMax').value);
   const price=parseFloat(document.getElementById('lessonPrice').value);
 
-  if(!slotId||!title){showToast('Vul alle velden in','error');return}
+  if(!date||!courtId||!from||!to||!title){showToast('Vul alle velden in','error');return}
 
-  // Update slot type
-  await db.from('time_slots').update({slot_type:'lesson'}).eq('id',slotId);
+  // Find all 30-min slots in the range for this court+date
+  const fromMin=timeToMin(from),toMin=timeToMin(to);
+  const{data:slotsInRange}=await db.from('time_slots').select('id,start_time').eq('date',date).eq('court_id',courtId);
+  const matchingSlots=(slotsInRange||[]).filter(s=>{const m=timeToMin(fmtTime(s.start_time));return m>=fromMin&&m<toMin});
 
-  const{error}=await db.from('lessons').insert({slot_id:slotId,title,level,max_participants:max,price,current_participants:0});
+  if(!matchingSlots.length){showToast('Geen slots gevonden in dit tijdsbereik. Genereer eerst slots via Weekschema.','error');return}
+
+  // Update all matching slots to lesson type and create lesson on first slot
+  for(const s of matchingSlots){
+    await db.from('time_slots').update({slot_type:'lesson'}).eq('id',s.id);
+  }
+
+  // Create lesson linked to first slot
+  const firstSlot=matchingSlots.sort((a,b)=>timeToMin(fmtTime(a.start_time))-timeToMin(fmtTime(b.start_time)))[0];
+  const{error}=await db.from('lessons').insert({slot_id:firstSlot.id,title,level,max_participants:max,price,current_participants:0});
   if(error){showToast('Fout: '+error.message,'error');return}
 
   showToast('Les aangemaakt!','success');
